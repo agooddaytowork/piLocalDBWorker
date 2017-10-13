@@ -2,45 +2,45 @@
 
 piLocalDBWorker::piLocalDBWorker(QObject *parent) : QStateMachine(parent)
 {
-    currentVarSet = new piLocalDBWorkerVarSet(this);
-    QObject::connect(currentVarSet, &piLocalDBWorkerVarSet::Out, this, &piLocalDBWorker::Out);
+    currentBasis = new piLocalDBWorkerBasis(this);
+    QObject::connect(currentBasis, &piLocalDBWorkerBasis::Out, this, &piLocalDBWorker::Out);
 
-    QState * main = new QState();
-    main->setObjectName("main");
+    QState *main = new QState();
+    main->setObjectName(QStringLiteral("main"));
 
-    connectDatabase * state1 = new connectDatabase(currentVarSet,main);
-    state1->setObjectName("connectDatabase");
-    updateLocalDatabase * state2 = new updateLocalDatabase(currentVarSet,main);
-    state2->setObjectName("updateLocalDatabase");
-    updateOnlineDatabase * state3 = new updateOnlineDatabase(currentVarSet,main);
-    state3->setObjectName("updateOnlineDatabase");
-    setIsSentColumnOnLocalDatabase * state4 = new setIsSentColumnOnLocalDatabase(currentVarSet,main);
-    state4->setObjectName("setIsSentColumnOnLocalDatabase");
+    uninitiatedPiLocalDBWorker *state0 = new uninitiatedPiLocalDBWorker(currentBasis,main);
+    idlePiLocalDBWorker *state1 = new idlePiLocalDBWorker(currentBasis,main);
+    runningPiLocalDBWorker *state2 = new runningPiLocalDBWorker(currentBasis,main);
+    sendJsonPiLocalDBWorker *state3 = new sendJsonPiLocalDBWorker(currentBasis,main);
+    setIsSentPiLocalDBWorker *state4 = new setIsSentPiLocalDBWorker(currentBasis,main);
 
-    state1->addTransition(currentVarSet, &piLocalDBWorkerVarSet::DatabaseConnected, state2);
-    state2->addTransition(currentVarSet, &piLocalDBWorkerVarSet::firstGlobalSignalAdded, state2);
-    state2->addTransition(new directTransition4piLocalDBWorkerState(currentVarSet,state3));
-    state3->addTransition(new directTransition4piLocalDBWorkerState(currentVarSet,state2));
-    state3->addTransition(currentVarSet, &piLocalDBWorkerVarSet::jsonPackageTransmitted, state4);
-    state4->addTransition(new directTransition4piLocalDBWorkerState(currentVarSet,state2));
+    state0->addTransition(currentBasis, &piLocalDBWorkerBasis::isInitialized, state1);
+    state1->addTransition(currentBasis, &piLocalDBWorkerBasis::aGlobalSignalAdded, state2);
+    state2->addTransition(new directTransition(currentBasis,SIGNAL(requestDirectTransition(QString)),state1));
+    state2->addTransition(new directTransition(currentBasis,SIGNAL(requestDirectTransition(QString)),state2));
+    state2->addTransition(currentBasis, &piLocalDBWorkerBasis::sendingPendingJsonDataPackage, state3);
+    state3->addTransition(currentBasis, &piLocalDBWorkerBasis::jsonPackageTransmitted, state4);
+    state3->addTransition(new directTransition(currentBasis,SIGNAL(requestDirectTransition(QString)),state2));
+    state4->addTransition(new directTransition(currentBasis,SIGNAL(requestDirectTransition(QString)),state2));
 
-    wait4ErrorHandler4piLocalDBWorker * state7 = new wait4ErrorHandler4piLocalDBWorker(currentVarSet);
-    state7->setObjectName("wait4ErrorHandler4piLocalDBWorker");
+    main->setInitialState(state0);
 
-    main->setInitialState(state1);
-    main->addTransition(currentVarSet, &piLocalDBWorkerVarSet::ErrorOccurred, state7);
+    errorPiLocalDBWorker *state7 = new errorPiLocalDBWorker(currentBasis);
 
-    this->addState(main);
-    this->addState(state7);
-    this->setInitialState(main);
+    state7->addTransition(new directTransition(currentBasis,SIGNAL(requestDirectTransition(QString)),state2));
 
-    anIf(piLocalDBWorkerDbgEn, anTrk("piLocalDBWorker Constructed"));
+    main->addTransition(currentBasis, &piLocalDBWorkerBasis::ErrorOccurred, state7);
+
+    addState(main);
+    addState(state7);
+    setInitialState(main);
+    anIf(piLocalDBWorkerDbgEn, anAck("piLocalDBWorker Constructed"));
 }
 
 void piLocalDBWorker::In(const GlobalSignal &aGlobalSignal)
 {
-    if (aGlobalSignal.Type.typeName() == QStringLiteral("piLocalDBWorkerVarSet::Data"))
+    if (isRunning())
     {
-        currentVarSet->addOneGlobalSignal(aGlobalSignal);
+        currentBasis->In(aGlobalSignal);
     }
 }

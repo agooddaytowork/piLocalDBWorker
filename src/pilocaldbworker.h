@@ -3,15 +3,15 @@
 
 #define piLocalDBWorkerDbgEn 1
 
-#include <QObject>
 #include <QStateMachine>
-#include "pilocaldbworkervarset.h"
-#include "directtransition4pilocaldbworkerstate.h"
-#include "connectdatabase.h"
-#include "updatelocaldatabase.h"
-#include "updateonlinedatabase.h"
-#include "setissentcolumnonlocaldatabase.h"
-#include "wait4errorhandler4pilocaldbworker.h"
+#include "pilocaldbworkerbasis.h"
+#include "shared/directtransition.h"
+#include "errorpilocaldbworker.h"
+#include "idlepilocaldbworker.h"
+#include "runningpilocaldbworker.h"
+#include "sendjsonpilocaldbworker.h"
+#include "setissentpilocaldbworker.h"
+#include "uninitiatedpilocaldbworker.h"
 
 class piLocalDBWorker : public QStateMachine
 {
@@ -23,7 +23,7 @@ signals:
 public slots:
     void In(const GlobalSignal &aGlobalSignal);
 private:
-    piLocalDBWorkerVarSet * currentVarSet = Q_NULLPTR;
+    piLocalDBWorkerBasis * currentBasis = nullptr;
 
 };
 

@@ -84,6 +84,7 @@ typedef struct
 {
     QVariant Type;
     QVariant Data;
+    QString TimeStamp;
     QString Key = QStringLiteral("NULL");
     QList<QString> DstStrs;
     qint16 Priority = 0;
@@ -92,6 +93,10 @@ typedef struct
 Q_DECLARE_METATYPE(GlobalSignal)
 
 #define registerGlobalSignal qRegisterMetaType<GlobalSignal>("GlobalSignal");
+
+extern const Qt::ConnectionType uniqueQtConnectionType;
+
+#define NOW2String QDateTime::currentDateTime().toString(Qt::ISODate);
 
 extern const QString piLocalDBWorkerObjName;
 extern const QString UHV2WorkerObjName;
@@ -102,16 +107,17 @@ extern const QString SmallCoordinatorObjName;
 extern QSqlDatabase localQSqlDatabase;
 
 #define connectLocalQSqlDatabase {\
-        localQSqlDatabase.setHostName(QStringLiteral("localhost"));\
-        localQSqlDatabase.setDatabaseName(QStringLiteral("raspberry"));\
-        localQSqlDatabase.setUserName(QStringLiteral("root"));\
-        localQSqlDatabase.setPassword(QStringLiteral("Ascenx123"));\
-        localQSqlDatabase.setPort(3306);\
-        if (localQSqlDatabase.open()) {\
-            anAck("Local Database Connected !");\
-        } else {\
-            anError("Failed To Connect Local Database !");\
-            exit(EXIT_FAILURE);\
-        }}
+        if (!(localQSqlDatabase.isOpen())) {\
+            localQSqlDatabase.setHostName(QStringLiteral("localhost"));\
+            localQSqlDatabase.setDatabaseName(QStringLiteral("raspberry"));\
+            localQSqlDatabase.setUserName(QStringLiteral("root"));\
+            localQSqlDatabase.setPassword(QStringLiteral("Ascenx123"));\
+            localQSqlDatabase.setPort(3306);\
+            if (localQSqlDatabase.open()) {\
+                anAck("Local Database Connected !");\
+            } else {\
+                anError("Failed To Connect Local Database !");\
+                exit(EXIT_FAILURE);\
+        }}}
 
 #endif // COMMONTHINGS_H
