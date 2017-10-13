@@ -21,6 +21,7 @@ public:
 
     QMap<qint16,QList<GlobalSignal>> prioritizedBuffer;
     QString previousStateName;
+    QString currentStateName;
     bool isInitiated = false;
 
     void addAGlobalSignal(const GlobalSignal &aGlobalSignal);

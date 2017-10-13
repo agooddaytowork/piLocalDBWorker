@@ -27,7 +27,7 @@ void piLocalDBWorkerBasis::initialize()
 }
 
 void piLocalDBWorkerBasis::dispose()
-{    
+{
     anIf(piLocalDBWorkerBasisDbgEn && isInitiated, anTrk("Clean piLocalDBWorkerBasis"));
     closeLocalDatabaseConnection();
     isInitiated = false;
@@ -66,7 +66,7 @@ void piLocalDBWorkerBasis::clearError()
 {
     anIf(piLocalDBWorkerBasisDbgEn && (ErrorType!=NoError), anInfo("Clear Error !"));
     ErrorType = NoError;
-    ErrorInfo.clear();    
+    ErrorInfo.clear();
     lastQSqlError = QSqlError();
 }
 
@@ -226,16 +226,16 @@ void piLocalDBWorkerBasis::executePrioritizedBuffer()
                 emit sendingPendingJsonDataPackage();
                 break;
             }
-            case executeSQL:
-            {
-                anIf(piLocalDBWorkerBasisDbgEn, anAck("executeSQL"));
-                execSQL(&tmpQuery1,currentGlobalSignal.Data.toString());
-                break;
-            }
             case clearBuffer:
             {
                 anIf(piLocalDBWorkerBasisDbgEn, anWarn("clearBuffer"));
                 clearPrioritizedBuffer();
+                break;
+            }
+            case executeSQL:
+            {
+                anIf(piLocalDBWorkerBasisDbgEn, anAck("executeSQL"));
+                execSQL(&tmpQuery1,currentGlobalSignal.Data.toString());
                 break;
             }
             default:
@@ -398,11 +398,12 @@ void piLocalDBWorkerBasis::emitErrorGlobalSignal()
 }
 
 void piLocalDBWorkerBasis::In(const GlobalSignal &aGlobalSignal)
-{    
-    if (aGlobalSignal.Type.typeName() == QStringLiteral("piLocalDBWorkerBasis::Data")
+{
+    if (currentStateName == QStringLiteral("errorPiLocalDBWorker")
+            && aGlobalSignal.Type.typeName() == QStringLiteral("piLocalDBWorkerBasis::Data")
             && aGlobalSignal.Type.toInt() == ignoreError)
     {
-
+        anIf(piLocalDBWorkerBasisDbgEn, anWarn("ignoreError"));
         emit requestDirectTransition(QStringLiteral("runningPiLocalDBWorker"));
     }
     else

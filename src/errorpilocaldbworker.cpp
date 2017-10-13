@@ -11,6 +11,7 @@ errorPiLocalDBWorker::errorPiLocalDBWorker(piLocalDBWorkerBasis *parentBasis, QS
 void errorPiLocalDBWorker::onEntry(QEvent *)
 {
     anIf(piLocalDBWorkerBasisDbgEn, anTrk("errorPiLocalDBWorker Entered"));
+    basisptr->currentStateName = objectName();
     qApp->processEvents();
     basisptr->emitErrorGlobalSignal();
 }
@@ -19,4 +20,5 @@ void errorPiLocalDBWorker::onExit(QEvent *)
 {
     anIf(piLocalDBWorkerBasisDbgEn, anTrk("Leave errorPiLocalDBWorker"));
     basisptr->clearError();
+    basisptr->previousStateName = objectName();
 }

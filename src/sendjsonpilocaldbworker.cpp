@@ -18,6 +18,7 @@ sendJsonPiLocalDBWorker::sendJsonPiLocalDBWorker(piLocalDBWorkerBasis *parentBas
 void sendJsonPiLocalDBWorker::onEntry(QEvent *)
 {
     anIf(piLocalDBWorkerBasisDbgEn, anTrk("sendJsonPiLocalDBWorker Entered"));
+    basisptr->currentStateName = objectName();
     if (basisptr->try2SendPendingJsonDataPackage())
     {
         timer.start();
@@ -29,4 +30,5 @@ void sendJsonPiLocalDBWorker::onExit(QEvent *)
 {
     anIf(piLocalDBWorkerBasisDbgEn, anTrk("Leave sendJsonPiLocalDBWorker"));
     timer.stop();
+    basisptr->previousStateName = objectName();
 }

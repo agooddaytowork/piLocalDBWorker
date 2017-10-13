@@ -11,6 +11,7 @@ runningPiLocalDBWorker::runningPiLocalDBWorker(piLocalDBWorkerBasis *parentBasis
 void runningPiLocalDBWorker::onEntry(QEvent *)
 {
     anIf(piLocalDBWorkerBasisDbgEn, anTrk("runningPiLocalDBWorker Entered"));
+    basisptr->currentStateName = objectName();
     qApp->processEvents();
     basisptr->executePrioritizedBuffer();
     if (basisptr->prioritizedBuffer.isEmpty())
