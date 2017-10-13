@@ -23,12 +23,12 @@ void piLocalDBWorkerBasis::initialize()
         isInitiated = true;
         emit isInitialized();
     }
-    anIf(piLocalDBWorkerBasisDbgEn && localDb.isOpen(), anTrk("piLocalDBWorkerBasis Initialized"));
+    anIf(piLocalDBWorkerBasisDbgEn && localDb.isOpen(), anAck("piLocalDBWorkerBasis Initialized"));
 }
 
 void piLocalDBWorkerBasis::dispose()
 {
-    anIf(piLocalDBWorkerBasisDbgEn && isInitiated, anTrk("Clean piLocalDBWorkerBasis"));
+    anIf(piLocalDBWorkerBasisDbgEn && isInitiated, anWarn("Clean piLocalDBWorkerBasis"));
     closeLocalDatabaseConnection();
     isInitiated = false;
 }
