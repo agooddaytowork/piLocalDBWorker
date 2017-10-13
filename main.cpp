@@ -1,17 +1,21 @@
 #include <QCoreApplication>
-#include "piLocalDBWorker/pilocaldbworker.h"
+#include "src/pilocaldbworker.h"
 #include <QThread>
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
-    qRegisterMetaType<GlobalSignal>("GlobalSignal");
+    registerGlobalSignal;
+    connectLocalQSqlDatabase;
 
 
 
     anWarn("START TEST");
 
     piLocalDBWorker * test = new piLocalDBWorker();
-    test->start();
+    QThread * newThread = new QThread();
+    test->moveToThread(newThread);
+    QObject::connect(newThread, &QThread::started, test, &piLocalDBWorker::start);
+    newThread->start();
 
 
 
