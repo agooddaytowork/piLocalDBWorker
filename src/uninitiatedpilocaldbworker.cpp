@@ -12,7 +12,7 @@ void uninitiatedPiLocalDBWorker::onEntry(QEvent *)
 {
     anIf(piLocalDBWorkerBasisDbgEn, anTrk("uninitiatedPiLocalDBWorker Entered"));
     qApp->processEvents();
-    if (basisptr->previousStateName.isEmpty() && !(basisptr->localDb.isOpen()))
+    if (!(basisptr->isInitiated))
     {
         basisptr->initialize();
     }

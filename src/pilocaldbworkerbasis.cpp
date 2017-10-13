@@ -20,6 +20,7 @@ void piLocalDBWorkerBasis::initialize()
     dispose();
     if (openLocalDatabaseConnection())
     {
+        isInitiated = true;
         emit isInitialized();
     }
     anIf(piLocalDBWorkerBasisDbgEn && localDb.isOpen(), anTrk("piLocalDBWorkerBasis Initialized"));
@@ -27,8 +28,9 @@ void piLocalDBWorkerBasis::initialize()
 
 void piLocalDBWorkerBasis::dispose()
 {    
-    anIf(piLocalDBWorkerBasisDbgEn && previousStateName.size(), anTrk("Clean piLocalDBWorkerBasis"));
+    anIf(piLocalDBWorkerBasisDbgEn && isInitiated, anTrk("Clean piLocalDBWorkerBasis"));
     closeLocalDatabaseConnection();
+    isInitiated = false;
 }
 
 void piLocalDBWorkerBasis::setOnOffLine(bool on1off0)
@@ -400,6 +402,7 @@ void piLocalDBWorkerBasis::In(const GlobalSignal &aGlobalSignal)
     if (aGlobalSignal.Type.typeName() == QStringLiteral("piLocalDBWorkerBasis::Data")
             && aGlobalSignal.Type.toInt() == ignoreError)
     {
+
         emit requestDirectTransition(QStringLiteral("runningPiLocalDBWorker"));
     }
     else
