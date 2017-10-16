@@ -242,6 +242,19 @@ void piLocalDBWorkerBasis::executePrioritizedBuffer()
                 break;
             }
         }
+        else if (currentGlobalSignalTypeTypeName == QStringLiteral("piLocalDBWorkerBasis::Notification"))
+        {
+            switch (currentGlobalSignal.Type.toInt()) {
+            case readyToWork:
+            {
+                anIf(piLocalDBWorkerBasisDbgEn, anAck("readyToWork"));
+                emit Out(currentGlobalSignal);
+                break;
+            }
+            default:
+                break;
+            }
+        }
     }
 }
 

@@ -9,6 +9,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     QThread *aThread = new QThread();
     piLocalDBWorker *piDBWorker = new piLocalDBWorker();
+    piDBWorker->setObjectName(piLocalDBWorkerObjName);
     piDBWorker->moveToThread(aThread);
 
     QObject::connect(aThread, &QThread::started, piDBWorker, &piLocalDBWorker::start);
