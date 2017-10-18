@@ -14,13 +14,16 @@ void runningPiLocalDBWorker::onEntry(QEvent *)
     basisptr->currentStateName = objectName();
     qApp->processEvents();
     basisptr->executePrioritizedBuffer();
-    if (basisptr->prioritizedBuffer.isEmpty())
+    if (basisptr->isCurrentRunningCycleCompleted)
     {
-        emit basisptr->requestDirectTransition(QStringLiteral("idlePiLocalDBWorker"));
-    }
-    else
-    {
-        emit basisptr->requestDirectTransition(QStringLiteral("runningPiLocalDBWorker"));
+        if (basisptr->prioritizedBuffer.isEmpty())
+        {
+            emit basisptr->goToState1();
+        }
+        else
+        {
+            emit basisptr->goToState2();
+        }
     }
 }
 

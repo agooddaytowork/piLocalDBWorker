@@ -15,13 +15,8 @@ void idlePiLocalDBWorker::onEntry(QEvent *)
     qApp->processEvents();
     if (basisptr->previousStateName == QStringLiteral("uninitiatedPiLocalDBWorker"))
     {
-        GlobalSignal iamReady;
-        iamReady.Type = QVariant::fromValue(piLocalDBWorkerBasis::readyToWork);
-        iamReady.Data = QVariant::fromValue(machine()->objectName());
-        iamReady.TimeStamp = NOW2String;
-        iamReady.DstStrs.append(SmallCoordinatorObjName);
-        iamReady.SignalPriority = 200;
-        basisptr->addAGlobalSignal(iamReady);
+        basisptr->queueNotificationReadyToWork();
+        emit basisptr->goToState2();
     }
 }
 

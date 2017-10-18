@@ -15,9 +15,6 @@
 #include <QSqlError>
 #include "shared/commonthings.h"
 #include "shared/abstractstatemachinebasis.h"
-#include "BinaryProtocol/src/binaryprotocol.h"
-#include "WindowProtocol/src/windowprotocol.h"
-#include "CanProtocol/src/canprotocol.h"
 #include "anLogger/src/anlogger.h"
 
 class piLocalDBWorkerBasis : public AbstractStateMachineBasis
@@ -105,6 +102,7 @@ public:
     bool isPendingJsonDataNotPING();
     void setIsSentColumnOnLocalDatabase();
     void emitErrorGlobalSignal();
+    void queueNotificationReadyToWork();
 signals:
     void sendingPendingJsonDataPackage();
     void jsonPackageTransmitted();
@@ -118,7 +116,6 @@ private:
     bool isOnline = true;
 
     //Cache
-    GlobalSignal currentGlobalSignal;
     QByteArray pendingJsonData;
     QString reservedStr1;
     QString reservedStr2;
@@ -133,9 +130,6 @@ private:
     QString tmpStr3;
     QString tmpStr4;
     QString tmpStr5;
-    BinaryProtocol tmpBP;
-    WindowProtocol tmpWP;
-    CanProtocol tmpCP;
 
     QNetworkAccessManager NAManager;
     QNetworkReply * networkReply = nullptr;

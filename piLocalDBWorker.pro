@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui sql network serialbus
+QT       += core gui sql network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 CONFIG += -std=c++11 console
@@ -30,9 +30,6 @@ SOURCES += \
         shared/abstractstatemachinebasis.cpp \
         shared/directtransition.cpp \
         anLogger/src/anlogger.cpp \
-        BinaryProtocol/src/binaryprotocol.cpp \
-        WindowProtocol/src/windowprotocol.cpp \
-        CanProtocol/src/canprotocol.cpp \
         src/pilocaldbworker.cpp \
         src/pilocaldbworkerbasis.cpp \
         src/uninitiatedpilocaldbworker.cpp \
@@ -48,9 +45,6 @@ HEADERS += \
         shared/abstractstatemachinebasis.h \
         shared/directtransition.h \
         anLogger/src/anlogger.h \
-        BinaryProtocol/src/binaryprotocol.h \
-        WindowProtocol/src/windowprotocol.h \
-        CanProtocol/src/canprotocol.h \
         src/pilocaldbworker.h \
         src/pilocaldbworkerbasis.h \
         src/uninitiatedpilocaldbworker.h \

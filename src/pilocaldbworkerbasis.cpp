@@ -21,15 +21,24 @@ void piLocalDBWorkerBasis::initialize()
     if (openLocalDatabaseConnection())
     {
         isInitiated = true;
-        emit isInitialized();
+        emit goToState1();
     }
-    anIf(piLocalDBWorkerBasisDbgEn && localDb.isOpen(), anAck("piLocalDBWorkerBasis Initialized"));
+    anIf(piLocalDBWorkerBasisDbgEn && isInitiated, anAck("piLocalDBWorkerBasis Initialized"));
 }
 
 void piLocalDBWorkerBasis::dispose()
 {
     anIf(piLocalDBWorkerBasisDbgEn && isInitiated, anWarn("Clean piLocalDBWorkerBasis"));
     closeLocalDatabaseConnection();
+    clearCache();
+    tmpQuery1.clear();
+    tmpQuery2.clear();
+    tmpStr.clear();
+    tmpStr1.clear();
+    tmpStr2.clear();
+    tmpStr3.clear();
+    tmpStr4.clear();
+    tmpStr5.clear();
     isInitiated = false;
 }
 
@@ -76,6 +85,7 @@ void piLocalDBWorkerBasis::clearCache()
     pendingJsonData.clear();
     reservedStr1.clear();
     reservedStr2.clear();
+    isCurrentRunningCycleCompleted = false;
 }
 
 void piLocalDBWorkerBasis::executePrioritizedBuffer()
@@ -127,6 +137,7 @@ void piLocalDBWorkerBasis::executePrioritizedBuffer()
                             pendingJsonData = constPINGJsonPackage;
                         }
                         emit sendingPendingJsonDataPackage();
+                        return;
                     }
                     else
                     {
@@ -205,6 +216,7 @@ void piLocalDBWorkerBasis::executePrioritizedBuffer()
                                         pendingJsonData = constPINGJsonPackage;
                                     }
                                     emit sendingPendingJsonDataPackage();
+                                    return;
                                 }
                             }
                         }
@@ -224,7 +236,7 @@ void piLocalDBWorkerBasis::executePrioritizedBuffer()
                     pendingJsonData = constPINGJsonPackage;
                 }
                 emit sendingPendingJsonDataPackage();
-                break;
+                return;
             }
             case clearBuffer:
             {
@@ -256,6 +268,7 @@ void piLocalDBWorkerBasis::executePrioritizedBuffer()
             }
         }
     }
+    isCurrentRunningCycleCompleted = true;
 }
 
 bool piLocalDBWorkerBasis::execSQL(QSqlQuery *aQuery, const QString &aSQL, bool navigateFirstRecordForSELECT)
@@ -410,6 +423,17 @@ void piLocalDBWorkerBasis::emitErrorGlobalSignal()
     emit Out(errorGlobalSignal);
 }
 
+void piLocalDBWorkerBasis::queueNotificationReadyToWork()
+{
+    GlobalSignal iamReady;
+    iamReady.Type = QVariant::fromValue(readyToWork);
+    iamReady.Data = QVariant::fromValue(parent()->objectName());
+    iamReady.TimeStamp = NOW2String;
+    iamReady.DstStrs.append(SmallCoordinatorObjName);
+    iamReady.SignalPriority = 200;
+    addAGlobalSignal(iamReady);
+}
+
 void piLocalDBWorkerBasis::In(const GlobalSignal &aGlobalSignal)
 {
     if (currentStateName == QStringLiteral("errorPiLocalDBWorker")
@@ -417,11 +441,15 @@ void piLocalDBWorkerBasis::In(const GlobalSignal &aGlobalSignal)
             && aGlobalSignal.Type.toInt() == ignoreError)
     {
         anIf(piLocalDBWorkerBasisDbgEn, anWarn("ignoreError"));
-        emit requestDirectTransition(QStringLiteral("runningPiLocalDBWorker"));
+        emit goToState2();
     }
     else
     {
         addAGlobalSignal(aGlobalSignal);
+        if (currentStateName == QStringLiteral("idlePiLocalDBWorker"))
+        {
+            emit goToState2();
+        }
     }
 }
 

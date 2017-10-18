@@ -15,7 +15,8 @@ void setIsSentPiLocalDBWorker::onEntry(QEvent *)
     qApp->processEvents();
     if (basisptr->isPendingJsonDataNotPING())
         basisptr->setIsSentColumnOnLocalDatabase();
-    emit basisptr->requestDirectTransition(QStringLiteral("runningPiLocalDBWorker"));
+    basisptr->isCurrentRunningCycleCompleted = true;
+    emit basisptr->goToState2();
 }
 
 void setIsSentPiLocalDBWorker::onExit(QEvent *)
