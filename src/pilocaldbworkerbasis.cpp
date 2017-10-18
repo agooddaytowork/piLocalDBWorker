@@ -30,6 +30,9 @@ void piLocalDBWorkerBasis::dispose()
 {
     anIf(piLocalDBWorkerBasisDbgEn && isInitiated, anWarn("Clean piLocalDBWorkerBasis"));
     closeLocalDatabaseConnection();
+    clearPrioritizedBuffer();
+    previousStateName.clear();
+    currentStateName.clear();
     clearCache();
     tmpQuery1.clear();
     tmpQuery2.clear();
@@ -260,7 +263,7 @@ void piLocalDBWorkerBasis::executePrioritizedBuffer()
             case readyToWork:
             {
                 anIf(piLocalDBWorkerBasisDbgEn, anAck("readyToWork"));
-                emit Out(currentGlobalSignal);
+                emit Out(GlobalSignal(currentGlobalSignal));
                 break;
             }
             default:
