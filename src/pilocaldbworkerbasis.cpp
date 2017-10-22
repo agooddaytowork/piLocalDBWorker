@@ -332,6 +332,10 @@ void piLocalDBWorkerBasis::setOnOffLine(bool on1off0)
         requestSyncOfflineData.Type = QVariant::fromValue(syncOfflineData);
         requestSyncOfflineData.Priority = 100;
         pushAGlobalSignalIntoPrioritizedBuffer(requestSyncOfflineData);
+        if (currentStateName == QStringLiteral("idlePiLocalDBWorker"))
+        {
+            emit GlobalSignalExecutionRequested();
+        }
         anIf(piLocalDBWorkerBasisDbgEn, anAck("Offline Data Sync Requested !"))
     }
     isOnline = on1off0;
