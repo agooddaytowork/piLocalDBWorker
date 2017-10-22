@@ -13,10 +13,7 @@ void setIsSentPiLocalDBWorker::onEntry(QEvent *)
     anIf(piLocalDBWorkerBasisDbgEn, anTrk("setIsSentPiLocalDBWorker Entered"));
     basisptr->currentStateName = objectName();
     qApp->processEvents();
-    if (basisptr->isPendingJsonDataNotPING())
-        basisptr->setIsSentColumnOnLocalDatabase();
-    basisptr->isCurrentRunningCycleCompleted = true;
-    emit basisptr->goToState2();
+    basisptr->setIsSentPiLocalDBWorkerOnEntry();
 }
 
 void setIsSentPiLocalDBWorker::onExit(QEvent *)

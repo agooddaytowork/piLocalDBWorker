@@ -14,20 +14,20 @@ piLocalDBWorker::piLocalDBWorker(QObject *parent) : QStateMachine(parent)
     sendJsonPiLocalDBWorker *state3 = new sendJsonPiLocalDBWorker(currentBasis,main);
     setIsSentPiLocalDBWorker *state4 = new setIsSentPiLocalDBWorker(currentBasis,main);
 
-    state0->addTransition(currentBasis, &piLocalDBWorkerBasis::goToState1, state1);
-    state1->addTransition(currentBasis, &piLocalDBWorkerBasis::goToState2, state2);
-    state2->addTransition(currentBasis, &piLocalDBWorkerBasis::goToState1, state1);
-    state2->addTransition(currentBasis, &piLocalDBWorkerBasis::goToState2, state2);
+    state0->addTransition(currentBasis, &piLocalDBWorkerBasis::goIdle, state1);
+    state1->addTransition(currentBasis, &piLocalDBWorkerBasis::GlobalSignalExecutionRequested, state2);
+    state2->addTransition(currentBasis, &piLocalDBWorkerBasis::goIdle, state1);
+    state2->addTransition(currentBasis, &piLocalDBWorkerBasis::GlobalSignalExecutionRequested, state2);
     state2->addTransition(currentBasis, &piLocalDBWorkerBasis::sendingPendingJsonDataPackage, state3);
     state3->addTransition(currentBasis, &piLocalDBWorkerBasis::jsonPackageTransmitted, state4);
-    state3->addTransition(currentBasis, &piLocalDBWorkerBasis::goToState2, state2);
-    state4->addTransition(currentBasis, &piLocalDBWorkerBasis::goToState2, state2);
+    state3->addTransition(currentBasis, &piLocalDBWorkerBasis::GlobalSignalExecutionRequested, state2);
+    state4->addTransition(currentBasis, &piLocalDBWorkerBasis::GlobalSignalExecutionRequested, state2);
 
     main->setInitialState(state0);
 
     errorPiLocalDBWorker *state7 = new errorPiLocalDBWorker(currentBasis);
 
-    state7->addTransition(currentBasis, &piLocalDBWorkerBasis::goToState2, state2);
+    state7->addTransition(currentBasis, &piLocalDBWorkerBasis::GlobalSignalExecutionRequested, state2);
 
     main->addTransition(currentBasis, &piLocalDBWorkerBasis::ErrorOccurred, state7);
 

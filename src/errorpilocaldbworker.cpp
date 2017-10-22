@@ -13,7 +13,7 @@ void errorPiLocalDBWorker::onEntry(QEvent *)
     anIf(piLocalDBWorkerBasisDbgEn, anTrk("errorPiLocalDBWorker Entered"));
     basisptr->currentStateName = objectName();
     qApp->processEvents();
-    basisptr->emitErrorGlobalSignal();
+    basisptr->errorPiLocalDBWorkerOnEntry();
 }
 
 void errorPiLocalDBWorker::onExit(QEvent *)

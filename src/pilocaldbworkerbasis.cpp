@@ -10,94 +10,40 @@ piLocalDBWorkerBasis::piLocalDBWorkerBasis(QObject *parent) : AbstractStateMachi
 }
 
 piLocalDBWorkerBasis::~piLocalDBWorkerBasis()
-{
+{    
+    anIf(piLocalDBWorkerBasisDbgEn, anWarn("Destroy piLocalDBWorkerBasis"));
     dispose();
-    anIf(piLocalDBWorkerBasisDbgEn, anWarn("piLocalDBWorkerBasis Destroyed"));
 }
 
-void piLocalDBWorkerBasis::initialize()
+void piLocalDBWorkerBasis::uninitiatedPiLocalDBWorkerOnEntry()
 {
-    dispose();
-    if (openLocalDatabaseConnection())
+    if (!isInitiated)
     {
-        isInitiated = true;
-        emit goToState1();
-    }
-    anIf(piLocalDBWorkerBasisDbgEn && isInitiated, anAck("piLocalDBWorkerBasis Initialized"));
-}
-
-void piLocalDBWorkerBasis::dispose()
-{
-    anIf(piLocalDBWorkerBasisDbgEn && isInitiated, anWarn("Clean piLocalDBWorkerBasis"));
-    closeLocalDatabaseConnection();
-    clearPrioritizedBuffer();
-    previousStateName.clear();
-    currentStateName.clear();
-    clearCache();
-    tmpQuery1.clear();
-    tmpQuery2.clear();
-    tmpStr.clear();
-    tmpStr1.clear();
-    tmpStr2.clear();
-    tmpStr3.clear();
-    tmpStr4.clear();
-    tmpStr5.clear();
-    isInitiated = false;
-}
-
-void piLocalDBWorkerBasis::setOnOffLine(bool on1off0)
-{
-    if (isOnline>on1off0)
-    {
-        anIf(piLocalDBWorkerBasisDbgEn, anWarn("Go Offline !"))
-    }
-    else if (isOnline<on1off0)
-    {
-        anIf(piLocalDBWorkerBasisDbgEn, anAck("Go Online !"))
-        GlobalSignal requestSyncOfflineData;
-        requestSyncOfflineData.Type = QVariant::fromValue(syncOfflineData);
-        requestSyncOfflineData.Priority = 100;
-        addAGlobalSignal(requestSyncOfflineData);
-        anIf(piLocalDBWorkerBasisDbgEn, anAck("Offline Data Sync Requested !"))
-    }
-    isOnline = on1off0;
-}
-
-void piLocalDBWorkerBasis::setError(const piLocalDBWorkerBasis::Error &anErrorType, const QString &anErrorInfo)
-{
-    if (anErrorType!=NoError)
-    {
-        anIf(piLocalDBWorkerBasisDbgEn, anError("Error Occurred !"));
-        ErrorType = anErrorType;
-        ErrorInfo = anErrorInfo;
-        emit ErrorOccurred();
+        initiate();
     }
 }
 
-void piLocalDBWorkerBasis::clearError()
+void piLocalDBWorkerBasis::idlePiLocalDBWorkerOnEntry()
 {
-    anIf(piLocalDBWorkerBasisDbgEn && (ErrorType!=NoError), anInfo("Clear Error !"));
-    ErrorType = NoError;
-    ErrorInfo.clear();
-    lastQSqlError = QSqlError();
+    if (previousStateName == QStringLiteral("uninitiatedPiLocalDBWorker"))
+    {
+        GlobalSignal iamReady;
+        iamReady.Type = QVariant::fromValue(readyToWork);
+        iamReady.Data = QVariant::fromValue(parent()->objectName());
+        iamReady.TimeStamp = NOW2String;
+        iamReady.DstStrs.append(GlobalSignalCoordinatorObjName);
+        iamReady.SignalPriority = 200;
+        pushAGlobalSignalIntoPrioritizedBuffer(iamReady);
+        emit GlobalSignalExecutionRequested();
+    }
 }
 
-void piLocalDBWorkerBasis::clearCache()
-{
-    currentGlobalSignal = GlobalSignal();
-    pendingJsonData.clear();
-    reservedStr1.clear();
-    reservedStr2.clear();
-    isCurrentRunningCycleCompleted = false;
-}
-
-void piLocalDBWorkerBasis::executePrioritizedBuffer()
+void piLocalDBWorkerBasis::runningPiLocalDBWorkerOnEntry()
 {
     clearCache();
     if (prioritizedBuffer.size())
     {
-        currentGlobalSignal = prioritizedBuffer.last().takeFirst();
-        deleteEmptyListsFromPrioritizedBuffer();
+        currentGlobalSignal = popMostPrioritizedGlobalSignalOutOfPrioritizedBuffer();
         QString currentGlobalSignalTypeTypeName = currentGlobalSignal.Type.typeName();
         if (currentGlobalSignalTypeTypeName == QStringLiteral("piLocalDBWorkerBasis::Data"))
         {
@@ -271,7 +217,151 @@ void piLocalDBWorkerBasis::executePrioritizedBuffer()
             }
         }
     }
-    isCurrentRunningCycleCompleted = true;
+    if (prioritizedBuffer.isEmpty())
+    {
+        emit goIdle();
+    }
+    else
+    {
+        emit GlobalSignalExecutionRequested();
+    }
+}
+
+bool piLocalDBWorkerBasis::sendJsonPiLocalDBWorkerOnEntry()
+{
+    if (pendingJsonData.isEmpty())
+    {
+       return false;
+    }
+    sendJsonDataPackage(pendingJsonData);
+    return true;
+}
+
+void piLocalDBWorkerBasis::setIsSentPiLocalDBWorkerOnEntry()
+{
+    if (isOnline && (pendingJsonData != constPINGJsonPackage))
+    {
+        switch (currentGlobalSignal.Type.toInt()) {
+        case updatePVIData:
+        {
+            if (reservedStr1.size() && reservedStr2.size())
+                execSQL(&tmpQuery1,"UPDATE " + reservedStr1 + " SET isSent=1 WHERE Time='" + reservedStr2 + "'");
+            break;
+        }
+        case updateRFIDData:
+        {
+            if (reservedStr1.size() && reservedStr2.size())
+                execSQL(&tmpQuery1,"UPDATE " + reservedStr1 + " SET isSent=1 WHERE Time='" + reservedStr2 + "'");
+            break;
+        }
+        case syncOfflineData:
+        {
+            if (execSQL(&tmpQuery1,QStringLiteral("SELECT RFID FROM stations"),false))
+            {
+                while (tmpQuery1.next())
+                {
+                    execSQL(&tmpQuery2,"UPDATE " + tmpQuery1.value("RFID").toString().toLower() + " SET isSent=1");
+                }
+            }
+            anIf(piLocalDBWorkerBasisDbgEn, anAck("Offline Data Synchronized !"));
+            break;
+        }
+        default:
+            break;
+        }
+    }
+    emit GlobalSignalExecutionRequested();
+}
+
+void piLocalDBWorkerBasis::errorPiLocalDBWorkerOnEntry()
+{
+    anIf(piLocalDBWorkerBasisDbgEn,
+         anError("Emit piLocalDBWorkerBasis::Error");
+         anInfo("ErrorType: " + QString(ErrorMetaEnum.valueToKey(static_cast<int>(ErrorType))));
+         anInfo("ErrorInfo: " + ErrorInfo);
+    );
+    GlobalSignal errorGlobalSignal;
+    errorGlobalSignal.Type = QVariant::fromValue(ErrorType);
+    errorGlobalSignal.Data = QVariant::fromValue(ErrorInfo);
+    errorGlobalSignal.Priority = 200;
+    errorGlobalSignal.SignalPriority = 200;
+    errorGlobalSignal.DstStrs.append(GlobalSignalCoordinatorObjName);
+    emit Out(errorGlobalSignal);
+}
+
+void piLocalDBWorkerBasis::initiate()
+{
+    dispose();
+    if (openLocalDatabaseConnection())
+    {
+        isInitiated = true;
+        emit goIdle();
+    }
+    anIf(piLocalDBWorkerBasisDbgEn && isInitiated, anAck("piLocalDBWorkerBasis Initialized"));
+}
+
+void piLocalDBWorkerBasis::dispose()
+{
+    anIf(piLocalDBWorkerBasisDbgEn && isInitiated, anWarn("Clean piLocalDBWorkerBasis"));
+    closeLocalDatabaseConnection();
+    clearPrioritizedBuffer();
+    previousStateName.clear();
+    currentStateName.clear();
+    clearCache();
+    tmpQuery1.clear();
+    tmpQuery2.clear();
+    tmpStr.clear();
+    tmpStr1.clear();
+    tmpStr2.clear();
+    tmpStr3.clear();
+    tmpStr4.clear();
+    tmpStr5.clear();
+    isInitiated = false;
+}
+
+void piLocalDBWorkerBasis::setOnOffLine(bool on1off0)
+{
+    if (isOnline>on1off0)
+    {
+        anIf(piLocalDBWorkerBasisDbgEn, anWarn("Go Offline !"))
+    }
+    else if (isOnline<on1off0)
+    {
+        anIf(piLocalDBWorkerBasisDbgEn, anAck("Go Online !"))
+        GlobalSignal requestSyncOfflineData;
+        requestSyncOfflineData.Type = QVariant::fromValue(syncOfflineData);
+        requestSyncOfflineData.Priority = 100;
+        pushAGlobalSignalIntoPrioritizedBuffer(requestSyncOfflineData);
+        anIf(piLocalDBWorkerBasisDbgEn, anAck("Offline Data Sync Requested !"))
+    }
+    isOnline = on1off0;
+}
+
+void piLocalDBWorkerBasis::setError(const piLocalDBWorkerBasis::Error &anErrorType, const QString &anErrorInfo)
+{
+    if (anErrorType!=NoError)
+    {
+        anIf(piLocalDBWorkerBasisDbgEn, anError("Error Occurred !"));
+        ErrorType = anErrorType;
+        ErrorInfo = anErrorInfo;
+        emit ErrorOccurred();
+    }
+}
+
+void piLocalDBWorkerBasis::clearError()
+{
+    anIf(piLocalDBWorkerBasisDbgEn && (ErrorType!=NoError), anInfo("Clear Error !"));
+    ErrorType = NoError;
+    ErrorInfo.clear();
+    lastQSqlError = QSqlError();
+}
+
+void piLocalDBWorkerBasis::clearCache()
+{
+    currentGlobalSignal = GlobalSignal();
+    pendingJsonData.clear();
+    reservedStr1.clear();
+    reservedStr2.clear();
 }
 
 bool piLocalDBWorkerBasis::execSQL(QSqlQuery *aQuery, const QString &aSQL, bool navigateFirstRecordForSELECT)
@@ -356,85 +446,8 @@ void piLocalDBWorkerBasis::sendJsonDataPackage(const QByteArray &data)
         setOnOffLine(true);
         anIf(piLocalDBWorkerBasisDbgEn, anAck("Json Package Transmitted !"));
         emit jsonPackageTransmitted();
-    }, uniqueQtConnectionType);
+    });
     anIf(piLocalDBWorkerBasisDbgEn,anAck("Try Sending Json Package ...");anInfo(data););
-}
-
-bool piLocalDBWorkerBasis::try2SendPendingJsonDataPackage()
-{
-    if (pendingJsonData.size())
-    {
-        sendJsonDataPackage(pendingJsonData);
-        return true;
-    }
-    return false;
-}
-
-bool piLocalDBWorkerBasis::isPendingJsonDataNotPING()
-{
-    return pendingJsonData != constPINGJsonPackage;
-}
-
-void piLocalDBWorkerBasis::setIsSentColumnOnLocalDatabase()
-{
-    if (isOnline)
-    {
-        switch (currentGlobalSignal.Type.toInt()) {
-        case updatePVIData:
-        {
-            if (reservedStr1.size() && reservedStr2.size())
-                execSQL(&tmpQuery1,"UPDATE " + reservedStr1 + " SET isSent=1 WHERE Time='" + reservedStr2 + "'");
-            break;
-        }
-        case updateRFIDData:
-        {
-            if (reservedStr1.size() && reservedStr2.size())
-                execSQL(&tmpQuery1,"UPDATE " + reservedStr1 + " SET isSent=1 WHERE Time='" + reservedStr2 + "'");
-            break;
-        }
-        case syncOfflineData:
-        {
-            if (execSQL(&tmpQuery1,QStringLiteral("SELECT RFID FROM stations"),false))
-            {
-                while (tmpQuery1.next())
-                {
-                    execSQL(&tmpQuery2,"UPDATE " + tmpQuery1.value("RFID").toString().toLower() + " SET isSent=1");
-                }
-            }
-            anIf(piLocalDBWorkerBasisDbgEn, anAck("Offline Data Synchronized !"));
-            break;
-        }
-        default:
-            break;
-        }
-    }
-}
-
-void piLocalDBWorkerBasis::emitErrorGlobalSignal()
-{
-    anIf(piLocalDBWorkerBasisDbgEn,
-         anError("Emit piLocalDBWorkerBasis::Error");
-         anInfo("ErrorType: " + QString(piLocalDBWorkerBasis::ErrorMetaEnum.valueToKey(static_cast<int>(ErrorType))));
-         anInfo("ErrorInfo: " + ErrorInfo);
-    );
-    GlobalSignal errorGlobalSignal;
-    errorGlobalSignal.Type = QVariant::fromValue(ErrorType);
-    errorGlobalSignal.Data = QVariant::fromValue(ErrorInfo);
-    errorGlobalSignal.Priority = 200;
-    errorGlobalSignal.SignalPriority = 200;
-    errorGlobalSignal.DstStrs.append(SmallCoordinatorObjName);
-    emit Out(errorGlobalSignal);
-}
-
-void piLocalDBWorkerBasis::queueNotificationReadyToWork()
-{
-    GlobalSignal iamReady;
-    iamReady.Type = QVariant::fromValue(readyToWork);
-    iamReady.Data = QVariant::fromValue(parent()->objectName());
-    iamReady.TimeStamp = NOW2String;
-    iamReady.DstStrs.append(SmallCoordinatorObjName);
-    iamReady.SignalPriority = 200;
-    addAGlobalSignal(iamReady);
 }
 
 void piLocalDBWorkerBasis::In(const GlobalSignal &aGlobalSignal)
@@ -444,14 +457,14 @@ void piLocalDBWorkerBasis::In(const GlobalSignal &aGlobalSignal)
             && aGlobalSignal.Type.toInt() == ignoreError)
     {
         anIf(piLocalDBWorkerBasisDbgEn, anWarn("ignoreError"));
-        emit goToState2();
+        emit GlobalSignalExecutionRequested();
     }
     else
     {
-        addAGlobalSignal(aGlobalSignal);
+        pushAGlobalSignalIntoPrioritizedBuffer(aGlobalSignal);
         if (currentStateName == QStringLiteral("idlePiLocalDBWorker"))
         {
-            emit goToState2();
+            emit GlobalSignalExecutionRequested();
         }
     }
 }

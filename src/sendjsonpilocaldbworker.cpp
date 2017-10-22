@@ -6,12 +6,11 @@ sendJsonPiLocalDBWorker::sendJsonPiLocalDBWorker(piLocalDBWorkerBasis *parentBas
 {
     setObjectName(QStringLiteral("sendJsonPiLocalDBWorker"));
     timer.setParent(this);
-    timer.setInterval(5000);
+    timer.setInterval(7000);
     timer.setSingleShot(true);
     QObject::connect(&timer, &QTimer::timeout, this, [&](){
         basisptr->setOnOffLine(false);
-        basisptr->isCurrentRunningCycleCompleted = true;
-        emit basisptr->goToState2();
+        emit basisptr->GlobalSignalExecutionRequested();
     });
     anIf(piLocalDBWorkerBasisDbgEn, anAck("sendJsonPiLocalDBWorker Constructed"));
 }
@@ -20,15 +19,11 @@ void sendJsonPiLocalDBWorker::onEntry(QEvent *)
 {
     anIf(piLocalDBWorkerBasisDbgEn, anTrk("sendJsonPiLocalDBWorker Entered"));
     basisptr->currentStateName = objectName();
-    if (basisptr->try2SendPendingJsonDataPackage())
-    {
+    qApp->processEvents();
+    if (basisptr->sendJsonPiLocalDBWorkerOnEntry())
+    {        
         timer.start();
     }
-    else
-    {
-        basisptr->isCurrentRunningCycleCompleted = true;
-    }
-    qApp->processEvents();
 }
 
 void sendJsonPiLocalDBWorker::onExit(QEvent *)

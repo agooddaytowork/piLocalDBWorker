@@ -13,11 +13,7 @@ void idlePiLocalDBWorker::onEntry(QEvent *)
     anIf(piLocalDBWorkerBasisDbgEn, anTrk("idlePiLocalDBWorker Entered"));
     basisptr->currentStateName = objectName();
     qApp->processEvents();
-    if (basisptr->previousStateName == QStringLiteral("uninitiatedPiLocalDBWorker"))
-    {
-        basisptr->queueNotificationReadyToWork();
-        emit basisptr->goToState2();
-    }
+    basisptr->idlePiLocalDBWorkerOnEntry();
 }
 
 void idlePiLocalDBWorker::onExit(QEvent *)

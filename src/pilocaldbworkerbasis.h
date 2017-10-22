@@ -73,45 +73,24 @@ public:
     static const QMetaEnum WarningMetaEnum;
     static const QMetaEnum NotificationMetaEnum;
 
-    static const QNetworkRequest onlineDb;
-    static const QByteArray constPINGJsonPackage;
+    void uninitiatedPiLocalDBWorkerOnEntry();
+    void idlePiLocalDBWorkerOnEntry();
+    void runningPiLocalDBWorkerOnEntry();
+    bool sendJsonPiLocalDBWorkerOnEntry();
+    void setIsSentPiLocalDBWorkerOnEntry();
+    void errorPiLocalDBWorkerOnEntry();
 
-    QSqlDatabase localDb;
-    Error ErrorType = NoError;
-    QString ErrorInfo;
-
-    void initialize();
-    void dispose();
     void setOnOffLine(bool on1off0);//On = true, Off = false
-    void setError(const Error & anErrorType, const QString & anErrorInfo);
-    void clearError();    
-    void executePrioritizedBuffer();
-    bool execSQL(QSqlQuery *aQuery,const QString &aSQL,bool navigateFirstRecordForSELECT = true);
-
-    static const QJsonObject createAJsonDataPackage(const QString &GlobalID,
-                                                    const QString &HV,
-                                                    const QString &Valve,
-                                                    const QString &Pressure,
-                                                    const QString &Voltage,
-                                                    const QString &Current,
-                                                    const QString &dstRFID,
-                                                    const QString &Time);
-    const QJsonArray getPendingJsonDataPackage();
-    void sendJsonDataPackage(const QByteArray &data);
-    bool try2SendPendingJsonDataPackage();
-    bool isPendingJsonDataNotPING();
-    void setIsSentColumnOnLocalDatabase();
-    void emitErrorGlobalSignal();
-    void queueNotificationReadyToWork();
+    void clearError();
 signals:
     void sendingPendingJsonDataPackage();
     void jsonPackageTransmitted();
 public slots:
     void In(const GlobalSignal &aGlobalSignal);
 private:
-    bool openLocalDatabaseConnection();
-    void closeLocalDatabaseConnection();
-    void clearCache();
+    QSqlDatabase localDb;
+    Error ErrorType = NoError;
+    QString ErrorInfo;
 
     bool isOnline = true;
 
@@ -133,6 +112,28 @@ private:
 
     QNetworkAccessManager NAManager;
     QNetworkReply * networkReply = nullptr;
+
+    static const QNetworkRequest onlineDb;
+    static const QByteArray constPINGJsonPackage;
+
+    void initiate();
+    void dispose();    
+    void setError(const Error & anErrorType, const QString & anErrorInfo);
+    bool execSQL(QSqlQuery *aQuery,const QString &aSQL,bool navigateFirstRecordForSELECT = true);
+    const QJsonArray getPendingJsonDataPackage();
+    void sendJsonDataPackage(const QByteArray &data);
+    bool openLocalDatabaseConnection();
+    void closeLocalDatabaseConnection();
+    void clearCache();
+
+    static const QJsonObject createAJsonDataPackage(const QString &GlobalID,
+                                                    const QString &HV,
+                                                    const QString &Valve,
+                                                    const QString &Pressure,
+                                                    const QString &Voltage,
+                                                    const QString &Current,
+                                                    const QString &dstRFID,
+                                                    const QString &Time);
 };
 
 Q_DECLARE_METATYPE(piLocalDBWorkerBasis::PVIData)

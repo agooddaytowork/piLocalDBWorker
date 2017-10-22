@@ -105,11 +105,13 @@ extern const Qt::ConnectionType uniqueQtConnectionType;
 #define NOW2String QDateTime::currentDateTime().toString(Qt::ISODate);
 
 extern const QString piLocalDBWorkerObjName;
-extern const QString UHV2WorkerObjName;
-extern const QString UHV4WorkerObjName;
-extern const QString UHV2PVICollectorObjName;
-extern const QString UHV4PVICollectorObjName;
-extern const QString SmallCoordinatorObjName;
+extern const QString UHV2SerialPortWorkerObjName;
+extern const QString UHV4SerialPortWorkerObjName;
+extern const QString UHV2SerialPortDataProcessorObjName;
+extern const QString UHV4SerialPortDataProcessorObjName;
+extern const QString CanBusWorkerObjName;
+extern const QString CanDataProcessorObjName;
+extern const QString GlobalSignalCoordinatorObjName;
 extern QSqlDatabase localQSqlDatabase;
 
 #define connectLocalQSqlDatabase {\
